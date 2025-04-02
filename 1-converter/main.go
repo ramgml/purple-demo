@@ -4,11 +4,22 @@ import (
 	"fmt"
 )
 
-const USD_TO_EUR float64 = 0.85
-const USD_TO_RUB float64 = 100
-
-
 func main() {
-	eur_to_rub := USD_TO_RUB / USD_TO_EUR
-	fmt.Printf("1 EUR = %.2f RUB\n", eur_to_rub)
+	usdToEur, usdToRub := inputCurrencyRates()
+	eurToRub := usdToRub / usdToEur
+	fmt.Printf("1 EUR = %.2f RUB\n", eurToRub)
+}
+
+func inputCurrencyRates() (float64, float64) {
+	fmt.Printf("Введите курс доллара к евро: ")
+	var usdToEur float64
+	fmt.Scan(&usdToEur)
+	fmt.Printf("Введите курс доллара к рублю: ")
+	var usdToRub float64
+	fmt.Scan(&usdToRub)
+	return usdToEur, usdToRub
+}
+
+func convert(a, b, c) {
+
 }
