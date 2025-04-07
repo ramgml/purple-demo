@@ -12,6 +12,21 @@ const USD_TO_EUR = 0.85
 const USD_TO_RUB = 85.0
 const EUR_TO_RUB = USD_TO_RUB / USD_TO_EUR
 
+var rates = map[string]map[string]float64{
+	USD: {
+		EUR: USD_TO_EUR,
+		RUB: USD_TO_RUB,
+	},
+	EUR: {
+		USD: 1.0 / USD_TO_EUR,
+		RUB: EUR_TO_RUB,
+	},
+	RUB: {
+		USD: USD_TO_RUB,
+		EUR: 1.0 / EUR_TO_RUB,
+	},
+}
+
 
 func main() {
 	sourceCurrency := inputSourceCurrency()
@@ -74,29 +89,15 @@ func inputTargetCurrency(sourceCurrency string) string {
 	}
 }
 
+
 func convert(sourceCurrency string, amount float64, targetCurrency string) float64{
-	switch sourceCurrency {
-	case USD:
-		switch targetCurrency {
-		case EUR:
-			return amount * USD_TO_EUR
-		case RUB:
-			return amount * USD_TO_RUB
-		}
-	case EUR:
-		switch targetCurrency {
-		case USD:
-			return amount / USD_TO_EUR
-		case RUB:
-			return amount * EUR_TO_RUB
-		}
-	case RUB:
-		switch targetCurrency {
-		case USD:
-			return amount / USD_TO_RUB
-		case EUR:
-			return amount / EUR_TO_RUB
-		}
+	rate := 0.0
+	if rate, ok := rates[sourceCurrency][targetCurrency]; ok {
+		return amount * rate
+	} else if !ok {
+		fmt.Println("Неизвестная валюта")
+		return 0
 	}
-	return 0
+
+	return amount * rate
 }
