@@ -4,6 +4,8 @@ import (
 	"fmt"
 )
 
+type RatesMap = map[string]map[string]float64
+
 const USD = "USD"
 const EUR = "EUR"
 const RUB = "RUB"
@@ -12,7 +14,7 @@ const USD_TO_EUR = 0.85
 const USD_TO_RUB = 85.0
 const EUR_TO_RUB = USD_TO_RUB / USD_TO_EUR
 
-var rates = map[string]map[string]float64{
+var rates = RatesMap{
 	USD: {
 		EUR: USD_TO_EUR,
 		RUB: USD_TO_RUB,
@@ -22,7 +24,7 @@ var rates = map[string]map[string]float64{
 		RUB: EUR_TO_RUB,
 	},
 	RUB: {
-		USD: USD_TO_RUB,
+		USD: 1.0 / USD_TO_RUB,
 		EUR: 1.0 / EUR_TO_RUB,
 	},
 }
@@ -33,7 +35,7 @@ func main() {
 	amount := inputAmount()	
 	targetCurrency := inputTargetCurrency(sourceCurrency)
 	fmt.Printf("Полученные данные: %s %.2f %s\n", sourceCurrency, amount, targetCurrency)
-	result := convert(sourceCurrency, amount, targetCurrency)
+	result := convert(&rates, sourceCurrency, amount, targetCurrency)
 	fmt.Printf("%.2f %s = %.2f %s\n", amount, sourceCurrency, result, targetCurrency)
 }
 
@@ -90,14 +92,12 @@ func inputTargetCurrency(sourceCurrency string) string {
 }
 
 
-func convert(sourceCurrency string, amount float64, targetCurrency string) float64{
+func convert(rates *RatesMap, sourceCurrency string, amount float64, targetCurrency string) float64{
 	rate := 0.0
-	if rate, ok := rates[sourceCurrency][targetCurrency]; ok {
+	if rate, ok := (*rates)[sourceCurrency][targetCurrency]; ok {
 		return amount * rate
 	} else if !ok {
 		fmt.Println("Неизвестная валюта")
-		return 0
 	}
-
 	return amount * rate
 }
