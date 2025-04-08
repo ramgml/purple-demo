@@ -1,8 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 )
+
+type RatesMap = map[string]map[string]float64
 
 const USD = "USD"
 const EUR = "EUR"
@@ -12,13 +15,32 @@ const USD_TO_EUR = 0.85
 const USD_TO_RUB = 85.0
 const EUR_TO_RUB = USD_TO_RUB / USD_TO_EUR
 
+var rates = RatesMap{
+	USD: {
+		EUR: USD_TO_EUR,
+		RUB: USD_TO_RUB,
+	},
+	EUR: {
+		USD: 1.0 / USD_TO_EUR,
+		RUB: EUR_TO_RUB,
+	},
+	RUB: {
+		USD: 1.0 / USD_TO_RUB,
+		EUR: 1.0 / EUR_TO_RUB,
+	},
+}
+
 
 func main() {
 	sourceCurrency := inputSourceCurrency()
 	amount := inputAmount()	
 	targetCurrency := inputTargetCurrency(sourceCurrency)
 	fmt.Printf("Полученные данные: %s %.2f %s\n", sourceCurrency, amount, targetCurrency)
-	result := convert(sourceCurrency, amount, targetCurrency)
+	result, err := convert(&rates, sourceCurrency, amount, targetCurrency)
+	if err != nil {
+		fmt.Println("Ошибка: Неверный ввод валюты")
+		return
+	}
 	fmt.Printf("%.2f %s = %.2f %s\n", amount, sourceCurrency, result, targetCurrency)
 }
 
@@ -74,29 +96,17 @@ func inputTargetCurrency(sourceCurrency string) string {
 	}
 }
 
-func convert(sourceCurrency string, amount float64, targetCurrency string) float64{
-	switch sourceCurrency {
-	case USD:
-		switch targetCurrency {
-		case EUR:
-			return amount * USD_TO_EUR
-		case RUB:
-			return amount * USD_TO_RUB
+
+func convert(rates *RatesMap, sourceCurrency string, amount float64, targetCurrency string) (float64, error) {
+	rate := 0.0
+	if sourceCurrencyRates, ok := (*rates)[sourceCurrency]; ok {
+		if targetCurrencyRate, ok := sourceCurrencyRates[targetCurrency]; ok {
+			rate = targetCurrencyRate
+		} else {
+			return 0, errors.New("unknown target currency")
 		}
-	case EUR:
-		switch targetCurrency {
-		case USD:
-			return amount / USD_TO_EUR
-		case RUB:
-			return amount * EUR_TO_RUB
-		}
-	case RUB:
-		switch targetCurrency {
-		case USD:
-			return amount / USD_TO_RUB
-		case EUR:
-			return amount / EUR_TO_RUB
-		}
+	} else {
+		return 0, errors.New("unknown source currency")
 	}
-	return 0
+	return amount * rate, nil
 }
