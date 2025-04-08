@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -14,26 +15,41 @@ const SUM = "SUM"
 const MED = "MED"
 
 func main() {
-	operantion := inputOperantion()
+	operantion := inputOperation()
 	numbers := inputNumbers()
 	switch operantion {
 	case AVG:
-		fmt.Printf("Среднее арифметическое: %.2f\n", average(numbers))
+		avg, err := average(numbers)
+		if err != nil {
+			fmt.Println("Ошибка: Неверный ввод чисел")
+			return
+		}
+		fmt.Printf("Среднее арифметическое: %.2f\n", avg)
 	case SUM:
-		fmt.Printf("Сумма: %.2f\n", sum(numbers))
+		sum, err := sum(numbers)
+		if err != nil {
+			fmt.Println("Ошибка: Неверный ввод чисел")
+			return
+		}
+		fmt.Printf("Сумма: %.2f\n", sum)
 	case MED:
-		fmt.Printf("Медиана: %.2f\n", median(numbers)) 
+		med, err := median(numbers)
+		if err != nil {
+			fmt.Println("Ошибка: Неверный ввод чисел")
+			return
+		}
+		fmt.Printf("Медиана: %.2f\n", med) 
 	}
 }
 
-func inputOperantion() string {
-	var operantion string
+func inputOperation() string {
+	var operation string
 	for {
 		fmt.Println("Введите операцию (AVG, SUM, MED):")
-		fmt.Scan(&operantion)
-		switch operantion {
+		fmt.Scan(&operation)
+		switch operation {
 		case AVG, SUM, MED:
-			return operantion
+			return operation
 		default:
 			fmt.Println("Неизвестная операция")
 			continue
@@ -42,51 +58,61 @@ func inputOperantion() string {
 }
 
 func inputNumbers() []float64 {
-	scanner := bufio.NewScanner(os.Stdin)
 	var numbers []float64
-
-	fmt.Println("Введите числа через запятую:")
-	scanner.Scan()
-	inputString := scanner.Text()
-
-	for _, str := range strings.Split(inputString, ",") {
-		if str == "" {
-			continue
-		}
-		number, err := strconv.ParseFloat(strings.TrimSpace(str), 64)
-		if err != nil {
-			fmt.Println("Ошибка преобразования строки в число:", err)
-			continue
-		}
-		numbers = append(numbers, number)
-	}
-	return numbers
+	mainLoop:
+		for {
+			fmt.Println("Введите числа через запятую:")
+			scanner := bufio.NewScanner(os.Stdin)
+			scanner.Scan()
+			inputString := scanner.Text()
+			for _, str := range strings.Split(inputString, ",") {
+				if str == "" {
+					continue
+				}
+				number, err := strconv.ParseFloat(strings.TrimSpace(str), 64)
+				if err != nil {
+					fmt.Println("Ошибка преобразования строки в число:", str)
+					continue mainLoop
+				}
+				numbers = append(numbers, number)
+			}
+			return numbers
+		} 
 }
 
-func average(numbers []float64) float64 {
+func average(numbers []float64) (float64, error) {
 	var sum float64
+	if len(numbers) == 0 {
+		return 0, errors.New("no numbers provided")
+	}
 	for _, number := range numbers {
 		sum += number
 	}
-	return sum / float64(len(numbers))
+	return sum / float64(len(numbers)), nil
 }
 
-func sum(numbers []float64) float64 {
+func sum(numbers []float64) (float64, error) {
 	var sum float64
+	if len(numbers) == 0 {
+		return 0, errors.New("no numbers provided")
+	}
 	for _, number := range numbers {
 		sum += number
 	}
-	return sum
+	return sum, nil
 }
 
-func median(numbers []float64) float64 {
+func median(numbers []float64) (float64, error) {
+	length := len(numbers)
+	if length == 0 {
+		return 0, errors.New("no numbers provided")
+	}
 	sortedNumbers := sortNumbers(numbers)
-	length := len(sortedNumbers)
 	medianIndex := length / 2
 	if length % 2 == 0 {
-		return (sortedNumbers[medianIndex] + sortedNumbers[medianIndex - 1]) / 2
+		return (sortedNumbers[medianIndex] + sortedNumbers[medianIndex - 1]) / 2, nil
 	}
-	return sortedNumbers[medianIndex]
+	return sortedNumbers[medianIndex], nil
 }
 
 func sortNumbers(numbers []float64) []float64 {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -35,7 +36,11 @@ func main() {
 	amount := inputAmount()	
 	targetCurrency := inputTargetCurrency(sourceCurrency)
 	fmt.Printf("Полученные данные: %s %.2f %s\n", sourceCurrency, amount, targetCurrency)
-	result := convert(&rates, sourceCurrency, amount, targetCurrency)
+	result, err := convert(&rates, sourceCurrency, amount, targetCurrency)
+	if err != nil {
+		fmt.Println("Ошибка: Неверный ввод валюты")
+		return
+	}
 	fmt.Printf("%.2f %s = %.2f %s\n", amount, sourceCurrency, result, targetCurrency)
 }
 
@@ -92,12 +97,16 @@ func inputTargetCurrency(sourceCurrency string) string {
 }
 
 
-func convert(rates *RatesMap, sourceCurrency string, amount float64, targetCurrency string) float64{
+func convert(rates *RatesMap, sourceCurrency string, amount float64, targetCurrency string) (float64, error) {
 	rate := 0.0
-	if rate, ok := (*rates)[sourceCurrency][targetCurrency]; ok {
-		return amount * rate
-	} else if !ok {
-		fmt.Println("Неизвестная валюта")
+	if sourceCurrencyRates, ok := (*rates)[sourceCurrency]; ok {
+		if targetCurrencyRate, ok := sourceCurrencyRates[targetCurrency]; ok {
+			rate = targetCurrencyRate
+		} else {
+			return 0, errors.New("unknown target currency")
+		}
+	} else {
+		return 0, errors.New("unknown source currency")
 	}
-	return amount * rate
+	return amount * rate, nil
 }
