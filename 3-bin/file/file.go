@@ -6,14 +6,14 @@ import (
 	"errors"
 )
 
-func WriteFile(path string, content string) (*os.File, error) {
+func WriteFile(path string, content string) error {
 	file, err := os.Create(path)
 	if err != nil {
-		return file, err
+		return err
 	}
 	defer file.Close()
 	_, err = file.WriteString(content)
-	return file, err
+	return err
 }
 
 func ReadFile(path string) ([]byte, error) {

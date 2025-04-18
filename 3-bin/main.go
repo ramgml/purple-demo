@@ -12,7 +12,10 @@ func main() {
 	var binList bins.BinList
 	binList.AddBin(&bin)
 	dataStorage := storage.NewStorage(&binList)
-	dataStorage.Save()
+	err := dataStorage.Save()
+	if err != nil {
+		fmt.Println("Не удалось сохранить файл")
+	}
 	loaded, _ := dataStorage.List()
 	fmt.Println(loaded)
 	fmt.Println(bin)

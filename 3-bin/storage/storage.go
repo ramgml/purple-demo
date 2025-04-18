@@ -22,9 +22,8 @@ func (storage *Storage) Save() error {
 	if err != nil {
 		return err
 	}
-
-	file.WriteFile("storage.json", string(content))
-	return nil
+	err = file.WriteFile("storage.json", string(content))
+	return err
 }
 
 func (storage *Storage) List() (*Storage, error) {
@@ -32,6 +31,10 @@ func (storage *Storage) List() (*Storage, error) {
 	if err != nil {
 		return storage, err
 	}
-	err = json.Unmarshal(data, &storage)
+	var tmp *Storage
+	err = json.Unmarshal(data, &tmp)
+	if err == nil {
+		storage = tmp
+	}
 	return storage, err
 }
