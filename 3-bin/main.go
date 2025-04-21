@@ -16,7 +16,7 @@ func main() {
 	if err != nil {
 		fmt.Println("Не удалось сохранить файл")
 	}
-	loaded, _ := dataStorage.List()
-	fmt.Println(loaded)
+	dataStorage.Load()
+	fmt.Println(dataStorage)
 	fmt.Println(bin)
 }

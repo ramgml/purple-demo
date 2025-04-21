@@ -14,31 +14,23 @@ const AVG = "AVG"
 const SUM = "SUM"
 const MED = "MED"
 
+
 func main() {
+	operations := map[string]func([]float64) (float64, error) {
+		AVG: average,
+		SUM: sum,
+		MED: median,
+	}
 	operantion := inputOperation()
+	operationFunc := operations[operantion]
 	numbers := inputNumbers()
-	switch operantion {
-	case AVG:
-		avg, err := average(numbers)
+	if operationFunc != nil {
+		res, err := operationFunc(numbers)
 		if err != nil {
 			fmt.Println("Ошибка: Неверный ввод чисел")
-			return
+		} else {
+			fmt.Printf("%.2f\n", res)
 		}
-		fmt.Printf("Среднее арифметическое: %.2f\n", avg)
-	case SUM:
-		sum, err := sum(numbers)
-		if err != nil {
-			fmt.Println("Ошибка: Неверный ввод чисел")
-			return
-		}
-		fmt.Printf("Сумма: %.2f\n", sum)
-	case MED:
-		med, err := median(numbers)
-		if err != nil {
-			fmt.Println("Ошибка: Неверный ввод чисел")
-			return
-		}
-		fmt.Printf("Медиана: %.2f\n", med) 
 	}
 }
 
