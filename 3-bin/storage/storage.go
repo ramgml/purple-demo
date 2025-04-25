@@ -6,18 +6,22 @@ import (
 	"encoding/json"
 )
 
-// Работа с файлом
-type Storage struct {
+type Storage interface{
+	Save() error
+	Load() error
+}
+
+type FileStorage struct {
 	Data bins.BinList
 }
 
 func NewStorage(data *bins.BinList) Storage {
-	var dataStorage Storage
-	dataStorage.Data = *data
-	return dataStorage
+	return &FileStorage{
+		Data: *data,
+	}
 }
 
-func (storage *Storage) Save() error {
+func (storage *FileStorage) Save() error {
 	content, err := json.Marshal(storage)
 	if err != nil {
 		return err
@@ -26,15 +30,15 @@ func (storage *Storage) Save() error {
 	return err
 }
 
-func (storage *Storage) List() (*Storage, error) {
+func (storage *FileStorage) Load() error {
 	data, err := file.ReadFile("storage.json")
 	if err != nil {
-		return storage, err
+		return err
 	}
-	var tmp *Storage
+	var tmp *FileStorage
 	err = json.Unmarshal(data, &tmp)
 	if err == nil {
 		storage = tmp
 	}
-	return storage, err
+	return err
 }
