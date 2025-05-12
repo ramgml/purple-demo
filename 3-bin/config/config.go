@@ -10,8 +10,10 @@ type Config struct {
 }
 
 func NewConfig() *Config {
-	godotenv.Load(".env")
+	godotenv.Load()
 	return &Config{
-		Key: os.Getenv("KEY"),
+		Key: os.Getenv("APIKEY"),
 	}
 }
+
+var Setup = NewConfig()
