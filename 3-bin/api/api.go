@@ -34,22 +34,23 @@ func makeRequest(method string, route string, name *string, body *[]byte) (*http
 	return request, err
 }
 
-func CreateBin(filename *string, name *string) {
+func CreateBin(filename *string, name *string) (*bins.Bin, error) {
 	postBody, err := file.ReadFile(*filename)
 	if err != nil {
-		fmt.Println(err.Error())
+		panic(err.Error())
 	}
 	request, _ := makeRequest("POST", "/b", name, &postBody)
 	response, err := client.Do(request)
 
 	if err != nil {
 		fmt.Println(err.Error())
+		return nil, err
 	}
 	defer response.Body.Close()
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		fmt.Println(err.Error()) 
-		return
+		return nil, err
 	}
 	var rawData map[string]json.RawMessage
 	json.Unmarshal(body, &rawData)
@@ -62,81 +63,98 @@ func CreateBin(filename *string, name *string) {
 	dataStorage.Data.AddBin(&bin)
 	err = dataStorage.Save()
 	if err != nil {
-		fmt.Println("Не удалось сохранить файл")
+		return nil, err
 	}
+	return &bin, err
 }
 
-func UpdateBin(filename *string, id *string) {
+func UpdateBin(filename *string, id *string) (*map[string]json.RawMessage, error) {
 	postBody, err := file.ReadFile(*filename)
 	if err != nil {
-		fmt.Println(err.Error())
+		return nil, err
 	}
 	route := fmt.Sprintf("/b/%s", *id)
 	request, _ := makeRequest("PUT", route, nil, &postBody)
 	response, err := client.Do(request)
 	if err != nil {
-		fmt.Println(err.Error())
+		return nil, err 
 	}
 	defer response.Body.Close()
+
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		fmt.Println(err.Error()) 
-		return
+		return nil, err
 	}
-	var rawData map[string]json.RawMessage
-	json.Unmarshal(body, &rawData)
-	var bin bins.Bin
-	json.Unmarshal(rawData["metadata"], &bin)
 
-	var binList bins.BinList
-	dataStorage := storage.NewStorage(&binList)
-	dataStorage.Load()
-	dataStorage.Data.AddBin(&bin)
-	err = dataStorage.Save()
-	if err != nil {
-		fmt.Println("Не удалось сохранить файл")
-	}
+	var rawData map[string]json.RawMessage
+	err = json.Unmarshal(body, &rawData)
+	return &rawData, err
 }
 
-func DeleteBin(id *string) {
+func DeleteBin(id *string) (*map[string]json.RawMessage, error) {
 	route := fmt.Sprintf("/b/%s", *id)
 	request, _ := makeRequest("DELETE", route, nil, nil)
 	response, err := client.Do(request)
 	if err != nil {
-		fmt.Println("ERROR:", response)
+		return nil, err
 	}
+	defer response.Body.Close()
+
+	var binList bins.BinList
+	dataStorage := storage.NewStorage(&binList)
+	dataStorage.Load()
+	var newBinList bins.BinList
+	for _, bin := range dataStorage.Data.Bins {
+		if bin.Id != *id {
+			binList.Bins = append(newBinList.Bins, bin)
+		}
+	}
+	err = dataStorage.Save()
+	if err != nil {
+		return nil, err
+
+	}
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		fmt.Println(err.Error()) 
+		return nil, err
+	}
+
+	var rawData map[string]json.RawMessage
+	err = json.Unmarshal(body, &rawData)
+	return &rawData, err
 }
 
-func GetBin(id *string) {
+func GetBin(id *string) (*map[string]json.RawMessage, error) {
 	route := fmt.Sprintf("/b/%s", *id)
 	request, _ := makeRequest("GET", route, nil, nil)
 	response, err := client.Do(request)
 	if err != nil {
 		fmt.Println("ERROR:", response)
-		return
+		return nil, err
 	}
 	defer response.Body.Close()
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		fmt.Println(err.Error()) 
-		return
+		fmt.Println(body) 
+		return nil, err
 	}
 	var rawData map[string]json.RawMessage
-	json.Unmarshal(body, &rawData)
-	fmt.Println(string(rawData["record"]))
-	fmt.Println(string(rawData["metadata"]))
-	fmt.Println("---")
+	err = json.Unmarshal(body, &rawData)
+	if err != nil {
+		return nil, err
+	}
+	return &rawData, nil
 }
 
-func ListBins() {
+func ListBins() (*bins.BinList, error) {
 	var bins bins.BinList
 	storage := storage.NewStorage(&bins)
-	storage.Load()
-	for _, bin := range storage.Data.Bins {
-		fmt.Println("ID:", bin.Id)
-		fmt.Println("Name:", bin.Name)
-		fmt.Println("Private:", bin.Private)
-		fmt.Println("Created at:", bin.CreatedAt)
-		fmt.Println("---")
+	err := storage.Load()
+	if err != nil {
+		return nil, err
 	}
+	return &storage.Data, err
 }

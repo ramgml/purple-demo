@@ -2,11 +2,13 @@ package main
 
 import (
 	"3-bin/api"
+	"3-bin/config"
 	"flag"
 	"fmt"
 )
 
 func main() {
+	config.LoadEnv(".env")
 	isCreate := flag.Bool("create", false, "Создать бин")
 	isUpdate := flag.Bool("update", false, "Изменить бин")
 	isDelete := flag.Bool("delete", false, "Удалить бин по ID")
@@ -20,18 +22,50 @@ func main() {
 	flag.Parse()
 	switch true {
 	case *isCreate:
-		api.CreateBin(filename, name)
-		fmt.Println("Бин создан")
+		bin, err := api.CreateBin(filename, name)
+		if err != nil {
+			fmt.Println(err.Error())
+		} else {
+			fmt.Printf("Бин %s создан", bin.Name)
+		}
 	case *isUpdate:
-		api.UpdateBin(filename, id)
-		fmt.Println("Бин обновлен")
+		responseData, err := api.UpdateBin(filename, id)
+		data := *responseData
+		if err != nil {
+			fmt.Println(err.Error())
+		} else {
+			fmt.Printf("Бин %s обновлен", data["metadata"])
+		}
 	case *isDelete:
-		api.DeleteBin(id)
-		fmt.Println("Бин удален")
+		_, err := api.DeleteBin(id)
+		if err != nil {
+			fmt.Println(err.Error())
+		} else {
+			fmt.Println("Бин удален")
+		}
 	case *isGet:
-		api.GetBin(id)
+		data, err := api.GetBin(id)
+		if err != nil {
+			fmt.Println(err.Error())
+		} else {
+			raw := *data
+			fmt.Println(string(raw["record"]))
+			fmt.Println(string(raw["metadata"]))
+			fmt.Println("---")
+		}
+
 	case *isList:
-		api.ListBins()
+		bins, err := api.ListBins()
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		for _, bin := range bins.Bins {
+			fmt.Println("ID:", bin.Id)
+			fmt.Println("Name:", bin.Name)
+			fmt.Println("Private:", bin.Private)
+			fmt.Println("Created at:", bin.CreatedAt)
+			fmt.Println("---")
+		}
 	default:
 		flag.Usage()
 	}

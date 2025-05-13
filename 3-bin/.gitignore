@@ -2,3 +2,4 @@
 storage.json
 __debug_bin
 my.json
+.env.test
