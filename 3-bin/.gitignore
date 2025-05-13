@@ -1,2 +1,5 @@
 3-bin
 storage.json
+__debug_bin
+my.json
+.env.test
