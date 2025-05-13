@@ -8,7 +8,10 @@ import (
 )
 
 func setUp() {
-	config.LoadEnv(".env.test")
+	err := config.LoadEnv(".env.test")
+	if err != nil {
+		panic(err.Error())
+	}
 	config.Setup = config.NewConfig()
 }
 

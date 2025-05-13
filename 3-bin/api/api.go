@@ -37,9 +37,14 @@ func makeRequest(method string, route string, name *string, body *[]byte) (*http
 func CreateBin(filename *string, name *string) (*bins.Bin, error) {
 	postBody, err := file.ReadFile(*filename)
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
+		return nil, err
 	}
-	request, _ := makeRequest("POST", "/b", name, &postBody)
+	request, err := makeRequest("POST", "/b", name, &postBody)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
 	response, err := client.Do(request)
 
 	if err != nil {
@@ -71,10 +76,15 @@ func CreateBin(filename *string, name *string) (*bins.Bin, error) {
 func UpdateBin(filename *string, id *string) (*map[string]json.RawMessage, error) {
 	postBody, err := file.ReadFile(*filename)
 	if err != nil {
+		fmt.Println(err.Error())
 		return nil, err
 	}
 	route := fmt.Sprintf("/b/%s", *id)
-	request, _ := makeRequest("PUT", route, nil, &postBody)
+	request, err := makeRequest("PUT", route, nil, &postBody)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
 	response, err := client.Do(request)
 	if err != nil {
 		return nil, err 
@@ -94,7 +104,11 @@ func UpdateBin(filename *string, id *string) (*map[string]json.RawMessage, error
 
 func DeleteBin(id *string) (*map[string]json.RawMessage, error) {
 	route := fmt.Sprintf("/b/%s", *id)
-	request, _ := makeRequest("DELETE", route, nil, nil)
+	request, err := makeRequest("DELETE", route, nil, nil)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
 	response, err := client.Do(request)
 	if err != nil {
 		return nil, err
@@ -110,6 +124,7 @@ func DeleteBin(id *string) (*map[string]json.RawMessage, error) {
 			binList.Bins = append(newBinList.Bins, bin)
 		}
 	}
+	dataStorage.Data.Bins = newBinList.Bins
 	err = dataStorage.Save()
 	if err != nil {
 		return nil, err
@@ -129,7 +144,11 @@ func DeleteBin(id *string) (*map[string]json.RawMessage, error) {
 
 func GetBin(id *string) (*map[string]json.RawMessage, error) {
 	route := fmt.Sprintf("/b/%s", *id)
-	request, _ := makeRequest("GET", route, nil, nil)
+	request, err := makeRequest("GET", route, nil, nil)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
 	response, err := client.Do(request)
 	if err != nil {
 		fmt.Println("ERROR:", response)

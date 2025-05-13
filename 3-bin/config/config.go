@@ -12,14 +12,15 @@ type Config struct {
 	Key string
 }
 
-func LoadEnv(envFilename string) {
+func LoadEnv(envFilename string) error {
 	_, filename, _, _ := runtime.Caller(0)
 	dir := filepath.Join(filepath.Dir(filename), "..")
 	envPath := filepath.Join(dir, envFilename)
 	err := godotenv.Load(envPath)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
+	return nil
 }
 
 func NewConfig() *Config {

@@ -8,7 +8,10 @@ import (
 )
 
 func main() {
-	config.LoadEnv(".env")
+	err := config.LoadEnv(".env")
+	if err != nil {
+		panic(err.Error())
+	}
 	isCreate := flag.Bool("create", false, "Создать бин")
 	isUpdate := flag.Bool("update", false, "Изменить бин")
 	isDelete := flag.Bool("delete", false, "Удалить бин по ID")
